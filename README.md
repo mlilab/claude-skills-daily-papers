@@ -17,6 +17,8 @@ Daily Papers is a Claude Code and Codex skill that finds new research papers in 
 
 A requested paper is classified with your topic keywords. It goes under `Others` if no topic matches. Requests can be added on weekends, even when there is no new arXiv listing.
 
+For requested summaries, the assistant reads the complete PDF, including appendices. An arXiv abstract link is enough to locate the PDF. If the PDF cannot be read in full, the assistant stops before publishing the summary.
+
 ## Requirements and installation
 
 - **Python 3.9+** and the packages in `requirements.txt`: `requests`, `pyyaml`, `Pillow`, and `cryptography`.

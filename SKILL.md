@@ -142,13 +142,15 @@ private feedback repo: `finish` writes the automatic 👍 before publishing.
    returns the matching topic names in score order, or `Others` when none match. It saves a
    separate request record, so a later automatic selection rewrite cannot drop the paper.
    It marks the paper for a detailed summary without using a per-topic summary slot.
-3. Run `python3 scripts/fetch_papers.py --date D --ids ID`, read the paper and relevant figures,
-   then write bilingual `summary.json` using `references/summary_guide.md` and the vendored
-   ASD-STE100 skill. Check it with `ste_check.py` and `render.py --date D --check --ids ID`.
+3. Run `python3 scripts/fetch_papers.py --date D --ids ID`. **For every reader-requested paper,
+   read the complete original PDF, even when the user supplies an arXiv `/abs/` URL or the fetcher
+   selects HTML.** Follow the PDF procedure in `references/summary_guide.md`; `content.md` can
+   truncate the appendix. If the PDF cannot be read in full, explain the obstacle and stop before
+   `finish`. Then write bilingual `summary.json` using that guide and the vendored ASD-STE100
+   skill. Check it with `ste_check.py` and `render.py --date D --check --ids ID`.
 4. Run `python3 scripts/request_paper.py finish --date D --id ID`. This validates the summary,
    records a 👍 in the private feedback repo, renders the issue, and publishes the encrypted site.
-   Verify the returned `publish.url/D/` is live and report the paper's topic and URL. If the
-   full text was unavailable, say that the summary used the abstract only.
+   Verify the returned `publish.url/D/` is live and report the paper's topic and URL.
 
 Only the reader-requested papers bypass the detailed-summary cap. The daily batch keeps its
 usual limit and schedule. Repeating the same request updates one entry rather than adding a

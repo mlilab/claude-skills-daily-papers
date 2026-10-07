@@ -14,12 +14,21 @@ it to a labmate.
   (and `previews`: PNG renderings of SVG files)
 
 Read `content.md` all the way through, paging with an available file reader when it is longer
-than one call. Concentrate on the intro, method and main experiments; skim the appendix. For the
+than one call. For daily-batch papers, concentrate on the intro, method and main experiments;
+skim the appendix. For the
 1–3 figures you plan to feature, open the PNG/JPG files with an image-capable tool so your explanation
 describes what the plot actually shows (axes, trends, which curve is theirs), not just the
 caption. If the image tool cannot display `.svg` files, `assets.json` lists a
 PNG rendering under `previews`; open that instead. Labels drawn inside `<foreignObject>` may
 be missing from a preview; if axis labels or legends are blank, grep the SVG source for them.
+
+For a **reader-requested paper**, also open its original PDF and read every page, including the
+appendices and supplementary pages. An arXiv `/abs/` URL is a pointer to the PDF, not permission
+to summarize the abstract. `content.md` may come from HTML and may truncate long appendices, so
+extract the PDF text separately without a length cap. Inspect page images or use OCR for scanned
+text, embedded screenshots, figures, and tables that text extraction misses. Check the PDF page
+count and confirm that every page was covered. If you cannot complete this read, stop before
+publishing and tell the reader what prevented it.
 
 ## Output: `<paper dir>/summary.json`
 
