@@ -348,13 +348,15 @@ def main():
         raise SystemExit(f"{root / 'selected.json'} not found — write it after reviewing candidates.")
     cands = {c["id"]: c for c in with_requested_candidates(
         read_json(root / "candidates.json", []), requested)}
-    changed = assign_slots(cfg, root, selected, cands)
+    want = set(args.ids.split(",")) if args.ids else None
+    requested_ids = {p["id"] for p in selected["papers"] if p.get("requested")}
+    # Fetching only reader requests must not reshuffle the existing daily summary slots.
+    changed = {} if want and want <= requested_ids else assign_slots(cfg, root, selected, cands)
     if changed or selected != original:
         write_json(root / "selected.json", selected)
         log(f"NOTE: summary slots (priority first, {cfg['max_papers_per_topic']} per topic): {changed}")
     todo = [p for p in selected["papers"] if p.get("summarize", True)]
-    if args.ids:
-        want = set(args.ids.split(","))
+    if want:
         todo = [p for p in todo if p["id"] in want]
     missing = [p["id"] for p in todo if p["id"] not in cands]
     if missing:

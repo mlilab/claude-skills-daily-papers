@@ -75,8 +75,15 @@ class RequestedPaperTests(unittest.TestCase):
         pid = "test:graph"
         self.prepare(pid, "Graph Transformer for Networks",
                      "We use message passing to train a graph model.")
-        write_json(self.root / self.date / "selected.json", {"date": self.date, "papers": []})
-        write_json(self.root / self.date / "candidates.json", [])
+        regular = [
+            {"id": "regular-1", "topics": ["Graph Learning"], "summarize": True},
+            {"id": "regular-2", "topics": ["Graph Learning"], "summarize": False},
+        ]
+        write_json(self.root / self.date / "selected.json", {"date": self.date, "papers": regular})
+        write_json(self.root / self.date / "candidates.json", [
+            {"id": p["id"], "title": p["id"], "abstract": "A graph paper.", "authors": []}
+            for p in regular
+        ])
         with patch.object(fetch_papers, "load_config", return_value=self.cfg), \
              patch("probe_affiliations.probe_ids", return_value={}), \
              patch.object(sys, "argv", ["fetch_papers.py", "--date", self.date, "--ids", pid]), \
@@ -86,7 +93,9 @@ class RequestedPaperTests(unittest.TestCase):
         pdir = self.root / self.date / "papers" / "test_graph"
         self.assertEqual(read_json(pdir / "meta.json")["selected_topics"], ["Graph Learning"])
         self.assertIn("We use message passing", (pdir / "content.md").read_text())
-        self.assertEqual(read_json(self.root / self.date / "selected.json")["papers"][0]["id"], pid)
+        selected = read_json(self.root / self.date / "selected.json")["papers"]
+        self.assertEqual(selected[-1]["id"], pid)
+        self.assertEqual([p["summarize"] for p in selected[:-1]], [True, False])
 
     def test_local_pdf_path_is_resolved_from_metadata_file(self):
         source = self.root / "paper.pdf"
