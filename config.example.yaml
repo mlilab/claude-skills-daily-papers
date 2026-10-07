@@ -1,0 +1,97 @@
+# Daily Papers 설정 파일 (예시 / 필드 설명)
+#
+# 실제 설정은 ~/.config/daily-papers/config.yaml 에 있습니다. 처음 실행하면 에이전트가 몇 가지를
+# 물어보고 (관심 주제, 우선순위, 자동 실행, Pages, 피드백, Slack 선택) 이 형식으로
+# 만들어 줍니다. 직접 고쳐도 되고, Claude Code나 Codex에 "주제 추가해줘"처럼 말해도 됩니다.
+
+timezone: Asia/Seoul          # "오늘 나온 논문"을 계산하는 시간대 (issue 날짜 기준)
+output_dir: ~/daily-papers    # HTML이 저장되는 위치 (날짜별 폴더)
+default_lang: ko              # 첫 화면 기본 언어 (ko | en)
+
+max_candidates: 400           # Claude가 검토할 후보 수 전체 상한 (안전장치)
+max_candidates_per_topic: 60  # 주제별로 남기는 키워드 상위 후보 수 (넓은 주제가 다른 주제를 밀어내지 않게)
+max_papers_per_topic: 10      # 자동 다이제스트의 주제별 상세 요약 상한. 개별 요청 논문은 제외
+max_also_relevant_per_topic: 30  # 주제별 '추가 관련 논문' 최대 편수 (우선순위 논문 먼저)
+min_score: 1                  # 키워드 점수 하한 (제목 매칭 3점, 초록 매칭 1점, 팔로우 저자 5점)
+
+sources:
+  arxiv:
+    enabled: true
+    categories: [cs.LG, cs.CL, cs.CV, cs.AI]   # 훑을 arXiv 카테고리 (관심 분야에 맞게)
+  huggingface:
+    enabled: true
+    include_all: true         # HF Daily Papers는 키워드에 안 걸려도 모두 후보로 (Claude가 관련성 판단)
+  openalex:
+    enabled: true             # 학회/저널 논문 (Google Scholar 대체). arXiv 논문과는 자동 중복 제거
+    max_results_per_topic: 40
+
+fetch:
+  max_appendix_figures: 8     # 부록 figure는 최대 몇 개까지 내려받을지
+  max_content_chars: 140000   # 요약용 본문 텍스트 최대 길이
+  workers: 3                  # 동시에 내려받을 논문 수
+
+serve:
+  host: 127.0.0.1             # 다른 기기에서 직접 접속하려면 0.0.0.0
+  port: 8000
+
+# 자동 실행 (setup.py schedule 이 이 값으로 systemd / launchd / cron 을 설치)
+#   arXiv 새 목록은 한국 시간 오전 9시 (미국 서머타임이 끝나는 겨울엔 10시)에 공개됩니다.
+#   10:30 이후로 잡으면 그날 목록을, 그 전 시간이면 전날 아침 목록을 정리합니다.
+schedule:
+  enabled: false
+  days: daily                 # daily | weekdays | [mon, wed, fri] 처럼 요일 목록
+  times: ["10:30"]            # "HH:MM" (따옴표 필수: YAML이 10:30을 숫자로 읽음), 여러 개 가능
+  timezone: Asia/Seoul        # times 의 기준 시간대 (KST)
+
+# GitHub Pages 게시: 비밀번호로 암호화한 사본을 https://<github_user>.github.io/<repo>/ 에 올립니다.
+#   페이지와 figure를 모두 암호화하고 논문 폴더 이름도 가립니다 (공개 repo여도 내용은 안 보임).
+#   설정 순서: setup.py token → publish.py set-password → setup.py github
+publish:
+  enabled: false
+  github_user: null           # 예: octocat
+  repo: papers                # → https://octocat.github.io/papers/
+  figure_days: 30             # figure 이미지는 최근 N일치만 올림 (페이지는 전부 유지)
+
+# 👍/👎 피드백 (선택, GitHub Pages 게시와 함께 사용): 게시 사이트의 상세 요약에 버튼이 생기고,
+#   투표는 비공개 repo에 저장됩니다. 좋아요가 min_likes개 이상이면 우선순위 논문 다음 남는
+#   상세 요약 슬롯을 '좋아요한 논문과 비슷한 순'으로 채웁니다.
+#   브라우저에는 그 repo 전용 fine-grained 토큰(Contents 읽기/쓰기)을 한 번 입력합니다.
+#   개별 요청 논문의 자동 좋아요에는 서버 토큰도 이 비공개 repo의 Contents 쓰기 권한이 필요합니다.
+#   기본적으로 publish.token_file을 사용하며, 별도 토큰이면 token_file에 보호된 로컬 경로를 지정하세요.
+feedback:
+  enabled: false
+  repo: null                  # 예: octocat/papers-feedback (private)
+  min_likes: 3
+  # token_file: ~/.config/daily-papers/feedback-token
+
+# Slack DM 알림 (선택): 예약 실행 종료 후 정상/에러 상태와 주제별 건수·URL을 DM으로 보냅니다.
+#   봇 토큰과 수신자 ID는 scripts/notify.py token/member 로 서버에만 저장합니다.
+#   Slack bot scopes: chat:write, im:write, users:read. users:read.email은 필요하지 않습니다.
+notify:
+  slack:
+    enabled: false
+
+# 우선순위 저자/기관: 주제별 목록 안에서 맨 위로 올리고 ★ 배지를 붙입니다.
+#   기관은 arXiv HTML의 저자·소속·이메일 블록과 HF Daily의 organization에서 찾습니다.
+priority:
+  affiliations: {}            # 예: {Example Lab: [Example Lab, EL Research]}
+  authors: []                 # 예: [Alex Example]  (이름 전체가 순서대로 맞아야 매칭)
+#   우선순위는 이미 관련 있는 논문의 순서만 바꿉니다. 키워드와 무관하게 받고 싶은 저자는
+#   해당 주제의 authors 에도 넣으세요.
+
+# 관심 주제
+#   name:        주제 이름 (필터 칩·섹션 제목)
+#   description: Claude가 관련성을 판단할 때 읽는 설명. 포함/제외 범위를 구체적으로 쓸수록 정확
+#   keywords:    1차 필터 키워드. 단어 단위·대소문자 무시·하이픈=공백, 마지막 단어는 복수형과
+#                붙은 버전 숫자까지 매칭 (policy→policies, ModelX→ModelX3). "re:" 정규식, "title:" 제목에서만
+#   exclude:     이 단어가 나오면 해당 주제에서 제외
+#   authors:     이 주제에서 팔로우할 저자/팀 (+5점, 키워드에 안 걸려도 후보가 됨)
+#   min_score:   이 주제의 키워드 점수 하한 (선택)
+#   categories:  추가로 훑을 arXiv 카테고리 (전체 수집 쿼리에 합쳐짐, 선택)
+topics: []
+# 예:
+# topics:
+#   - name: Graph Learning
+#     description: >
+#       Methods and evaluations for graph representation learning. Out of scope: graph drawing.
+#     keywords: [graph neural network, message passing, graph transformer]

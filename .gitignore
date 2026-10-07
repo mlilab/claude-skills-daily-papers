@@ -1,0 +1,14 @@
+config.yaml
+__pycache__/
+*.pyc
+.env
+.env.*
+/.publish/
+/.feedback/
+/.state/
+/.backup/
+/.config/
+/20??-??-??/
+/.autorun*.log
+/.server.json
+/index.html
